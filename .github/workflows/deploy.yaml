@@ -21,7 +21,7 @@ jobs:
       - name: 📦 Get dependencies
         run: flutter pub get
 
-      - name: 🏗️ Install Flutter
+      - name: 🏗️ Build
         run: flutter build web --release
 
       - name: 🛥 Deploy
