@@ -1,0 +1,34 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@v3.0.2
+
+      - name: 💙 Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🏗️ Install Flutter
+        run: flutter build web --release
+
+      - name: 🛥 Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          user_name: cgutierr-zgz
+          user_email: carlosgutimo.3d@gmail.com
+          publish_branch: master
