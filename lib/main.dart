@@ -1,6 +1,8 @@
+// ignore_for_file: avoid_web_libraries_in_flutter
+
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html';
+import 'dart:html' as html;
+import 'dart:js' as js;
 
 import 'package:apple_required_reasons_api_generator/privacy_info_generator.dart';
 import 'package:apple_required_reasons_api_generator/required_apis.dart';
@@ -58,17 +60,18 @@ final class _HomePageState extends State<HomePage> {
   void downloadPrivacyInfoFile() {
     final xmlContent =
         PrivacyInfoGenerator.generatePrivacyInfoXml(selectedReasons);
-    final blob = Blob([xmlContent]);
-    final url = Url.createObjectUrlFromBlob(blob);
-    AnchorElement(href: url)
+    final blob = html.Blob([xmlContent]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
       ..setAttribute('download', 'PrivacyInfo.xcprivacy')
       ..click();
-    Url.revokeObjectUrl(url);
+    html.Url.revokeObjectUrl(url);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Apple Required Reasons API Generator'),
         actions: [
@@ -78,71 +81,97 @@ final class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: reasons.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-              itemCount: reasons.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final reason = reasons[index];
-                final categoryKey = reason.key;
-                final selectedCount = selectedReasons.containsKey(categoryKey)
-                    ? selectedReasons[categoryKey]!.length
-                    : 0;
+      body: ListView.separated(
+        itemCount: reasons.length,
+        separatorBuilder: (_, __) => const Divider(),
+        itemBuilder: (context, index) {
+          final reason = reasons[index];
+          final categoryKey = reason.key;
+          final selectedCount = selectedReasons.containsKey(categoryKey)
+              ? selectedReasons[categoryKey]!.length
+              : 0;
 
-                return ExpansionTile(
-                  title: Text(
-                    '${reason.requiredReasonApi} ($selectedCount/${reason.reasons.length})',
-                  ),
-                  leading: IconButton(
-                    icon: const Icon(Icons.info),
-                    onPressed: () => showDialog<void>(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                categoryKey,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 20),
-                              Text(reason.description),
-                              const SizedBox(height: 20),
-                              Text(
-                                'Relevant APIs:',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              ...reason.relevantApis.map(Text.new),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  children: reason.reasons.entries.map((entry) {
-                    final isSelected =
-                        selectedReasons.containsKey(categoryKey) &&
-                            selectedReasons[categoryKey]!.contains(entry.key);
-
-                    return CheckboxListTile(
-                      title: Text(
-                        entry.key,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(entry.value),
-                      value: isSelected,
-                      onChanged: (_) => toggleReason(categoryKey, entry.key),
-                    );
-                  }).toList(),
-                );
-              },
+          return ExpansionTile(
+            shape: const Border(),
+            title: Text(
+              '${reason.requiredReasonApi} ($selectedCount/${reason.reasons.length})',
             ),
+            leading: IconButton(
+              icon: const Icon(Icons.info),
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    content: SingleChildScrollView(
+                      child: SelectionArea(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.link),
+                                  onPressed: () => js.context.callMethod(
+                                    'open',
+                                    [reason.url],
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  child: Text(
+                                    categoryKey,
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Text(reason.description),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Relevant APIs:',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            ...reason.relevantApis.map(Text.new),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            children: reason.reasons.entries.map((entry) {
+              final isSelected = selectedReasons.containsKey(categoryKey) &&
+                  selectedReasons[categoryKey]!.contains(entry.key);
+
+              return SelectionArea(
+                child: CheckboxListTile(
+                  title: ExpansionTile(
+                    shape: const Border(),
+                    title: Text(
+                      entry.key,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    children: [Text(entry.value)],
+                  ),
+                  value: isSelected,
+                  onChanged: (_) => toggleReason(categoryKey, entry.key),
+                ),
+              );
+            }).toList(),
+          );
+        },
+      ),
     );
   }
 }

@@ -30,7 +30,7 @@ abstract final class PrivacyInfoGenerator {
 
     plist.forEach((key, value) {
       buffer.writeln('<key>$key</key>');
-      _writeValue(buffer, value);
+      _writeValue(buffer, value, 1);
     });
 
     buffer
@@ -40,22 +40,23 @@ abstract final class PrivacyInfoGenerator {
     return buffer.toString();
   }
 
-  static void _writeValue(StringBuffer buffer, dynamic value) {
+  static void _writeValue(StringBuffer buffer, dynamic value, int depth) {
+    final indent = '  ' * depth;
     if (value is Map<String, dynamic>) {
-      buffer.writeln('<dict>');
+      buffer.writeln('$indent<dict>');
       value.forEach((key, value) {
-        buffer.writeln('<key>$key</key>');
-        _writeValue(buffer, value);
+        buffer.writeln('$indent  <key>$key</key>');
+        _writeValue(buffer, value, depth + 1);
       });
-      buffer.writeln('</dict>');
+      buffer.writeln('$indent</dict>');
     } else if (value is List) {
-      buffer.writeln('<array>');
+      buffer.writeln('$indent<array>');
       for (final element in value) {
-        _writeValue(buffer, element);
+        _writeValue(buffer, element, depth + 1);
       }
-      buffer.writeln('</array>');
+      buffer.writeln('$indent</array>');
     } else if (value is String) {
-      buffer.writeln('<string>$value</string>');
+      buffer.writeln('$indent<string>$value</string>');
     }
   }
 }
