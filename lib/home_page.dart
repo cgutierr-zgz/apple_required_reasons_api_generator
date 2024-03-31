@@ -57,12 +57,29 @@ final class _HomePageState extends State<HomePage> {
     html.Url.revokeObjectUrl(url);
   }
 
+  int get totalAvailable {
+    var totalCount = 0;
+    for (final reason in reasons) {
+      totalCount += reason.reasons.length;
+    }
+    return totalCount;
+  }
+
+  int get totalSelected {
+    var totalCount = 0;
+    selectedReasons.forEach((_, reasons) {
+      totalCount += reasons.length;
+    });
+    return totalCount;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Apple Required Reasons API Generator'),
         actions: [
+          Text('$totalSelected/$totalAvailable'),
           IconButton(
             icon: const Icon(Icons.download),
             onPressed: downloadPrivacyInfoFile,
@@ -103,6 +120,7 @@ final class _HomePageState extends State<HomePage> {
                       entry.key,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    expandedAlignment: Alignment.centerLeft,
                     children: [Text(entry.value)],
                   ),
                   value: isSelected,
