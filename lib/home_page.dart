@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:html' as html;
+import 'dart:js' as js;
 
 import 'package:apple_required_reasons_api_generator/info_dialog.dart';
 import 'package:apple_required_reasons_api_generator/privacy_info_generator.dart';
@@ -73,11 +74,30 @@ final class _HomePageState extends State<HomePage> {
     return totalCount;
   }
 
+  String get githubLogo => switch (Theme.of(context).brightness) {
+        Brightness.dark => 'assets/github-mark-white.png',
+        Brightness.light => 'assets/github-mark.png',
+      };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Image.asset(
+            githubLogo,
+            width: kToolbarHeight / 2,
+            height: kToolbarHeight / 2,
+          ),
+          onPressed: () => js.context.callMethod(
+            'open',
+            [
+              'https://github.com/cgutierr-zgz/apple_required_reasons_api_generator',
+            ],
+          ),
+        ),
         title: const Text('Apple Required Reasons API Generator'),
+        centerTitle: false,
         actions: [
           Text('$totalSelected/$totalAvailable'),
           IconButton(
